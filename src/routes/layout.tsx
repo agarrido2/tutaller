@@ -1,17 +1,37 @@
-import { component$, Slot } from "@builder.io/qwik";
+import { component$, Slot, useSignal, useContextProvider } from "@builder.io/qwik";
 import type { RequestHandler } from "@builder.io/qwik-city";
+import { Footer } from "~/components/landing/footer/footer";
+import { ScrollToTop } from "~/components/landing/scroll-to-top/scroll-to-top";
+import { Modal } from "~/components/shared/modal/modal";
+import { ModalContext } from "~/stores/modal.store";
 
 export const onGet: RequestHandler = async ({ cacheControl }) => {
-  // Control caching for this request for best performance and to reduce hosting costs:
-  // https://qwik.dev/docs/caching/
   cacheControl({
-    // Always serve a cached response by default, up to a week stale
     staleWhileRevalidate: 60 * 60 * 24 * 7,
-    // Max once every 5 seconds, revalidate on the server to get a fresh version of this page
     maxAge: 5,
   });
 };
 
 export default component$(() => {
-  return <Slot />;
+  const isModalOpen = useSignal(false);
+
+  useContextProvider(ModalContext, {
+    isOpen: isModalOpen
+  });
+
+  return (
+    <>
+      <main>
+        <Slot />
+      </main>
+      <Footer />
+      <ScrollToTop />
+      <div id="modal-root">
+        <Modal 
+          isOpen={isModalOpen.value} 
+          onClose$={() => isModalOpen.value = false}
+        />
+      </div>
+    </>
+  );
 });
